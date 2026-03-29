@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 if (process.env.NODE_ENV !== "production") {
   app.use(
     cors({
-      origin: "http://localhost:5173", // port React kamu
+      origin: "https://my-notes-web-blond.vercel.app", // port React kamu
     }),
   );
 }

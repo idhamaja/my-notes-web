@@ -26,7 +26,8 @@ if (process.env.NODE_ENV !== "production") {
       origin: [
         "http://localhost:5173",
         "https://my-notes-web-blond.vercel.app",
-      ], // port React kamu
+      ],
+      credentials: true,
     }),
   );
 }

@@ -5,13 +5,27 @@ import dotenv from "dotenv";
 import path from "path";
 import rateLimiter from "./middleware/rateLimiter.js";
 import cors from "cors";
-dotenv.config(); // 🔥 HARUS PALING ATAS
+import { fileURLToPath } from "url";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
-const __dirname = path.resolve();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Optional: fix CSP issue (basic)
+// CORS configuration for all environments
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL || true
+        : "http://localhost:5173",
+    credentials: true,
+  }),
+);
+
+// Fix CSP issue
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
@@ -20,38 +34,37 @@ app.use((req, res, next) => {
   next();
 });
 
-if (process.env.NODE_ENV !== "production") {
-  // Di file server.js atau app.js
-  app.use(
-    cors({
-      origin: "http://localhost:5173",
-      credentials: true,
-    }),
-  );
-}
-
-//middleware
+// Middleware
 app.use(express.json());
-
 app.use(rateLimiter);
 
+// Logging middleware
 app.use((req, res, next) => {
   console.log(`Request method: ${req.method} | Request URL: ${req.url}`);
   next();
 });
 
+// Routes
 app.use("/api/notes", noteRoutes);
 
+// Serve static files in production
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.resolve(__dirname, "../frontend/dist")));
+  const distPath = path.resolve(__dirname, "../frontend/dist");
+  app.use(express.static(distPath));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
+    res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log("Server started on PORT: Boss!!!", PORT);
+// Only connect to DB and listen if not in Vercel serverless environment
+if (process.env.NODE_ENV !== "production") {
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log("Server started on PORT:", PORT);
+    });
   });
-});
+}
+
+// Export for Vercel serverless functions
+export default app;

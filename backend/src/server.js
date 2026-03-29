@@ -11,60 +11,57 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+// Fix __dirname in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// CORS configuration for all environments
+// ✅ CONNECT DB (WAJIB SELALU JALAN)
+connectDB();
+
+// ✅ CORS FIX (JANGAN pakai true)
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL || true
-        : "http://localhost:5173",
+    origin: ["http://localhost:5173", "https://my-notes-web-blond.vercel.app"],
     credentials: true,
   }),
 );
-
-// Fix CSP issue
-app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;",
-  );
-  next();
-});
 
 // Middleware
 app.use(express.json());
 app.use(rateLimiter);
 
-// Logging middleware
+// Logging (optional tapi bagus)
 app.use((req, res, next) => {
-  console.log(`Request method: ${req.method} | Request URL: ${req.url}`);
+  console.log(`${req.method} ${req.url}`);
   next();
+});
+
+// ✅ TEST ROUTE (debug)
+app.get("/api/test", (req, res) => {
+  res.send("API is working 🚀");
 });
 
 // Routes
 app.use("/api/notes", noteRoutes);
 
-// Serve static files in production
+// Serve frontend (optional, kalau satu repo)
 if (process.env.NODE_ENV === "production") {
   const distPath = path.resolve(__dirname, "../frontend/dist");
+
   app.use(express.static(distPath));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+    res.sendFile(path.join(distPath, "index.html"));
   });
 }
 
-// Only connect to DB and listen if not in Vercel serverless environment
+// ✅ LOCAL ONLY (JANGAN jalan di Vercel)
 if (process.env.NODE_ENV !== "production") {
-  connectDB().then(() => {
-    app.listen(PORT, () => {
-      console.log("Server started on PORT:", PORT);
-    });
+  app.listen(PORT, () => {
+    console.log("Server running on port:", PORT);
   });
 }
 
-// Export for Vercel serverless functions
+// ✅ EXPORT for Vercel
 export default app;

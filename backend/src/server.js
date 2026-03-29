@@ -21,12 +21,10 @@ app.use((req, res, next) => {
 });
 
 if (process.env.NODE_ENV !== "production") {
+  // Di file server.js atau app.js
   app.use(
     cors({
-      origin: [
-        "http://localhost:5173",
-        "https://my-notes-web-blond.vercel.app",
-      ],
+      origin: "http://localhost:5173",
       credentials: true,
     }),
   );

@@ -2,12 +2,14 @@ import express from "express";
 import noteRoutes from "./routes/notesRoutes.js";
 import { connectDB } from "./config/db.js";
 import dotenv from "dotenv";
+import path from "path";
 import rateLimiter from "./middleware/rateLimiter.js";
 import cors from "cors";
 dotenv.config(); // 🔥 HARUS PALING ATAS
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const __dirname = path.resolve();
 
 // Optional: fix CSP issue (basic)
 app.use((req, res, next) => {
@@ -18,9 +20,13 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors({
-  origin: "http://localhost:5173", // port React kamu
-}));
+if (process.env.NODE_ENV !== "production") {
+  app.use(
+    cors({
+      origin: "http://localhost:5173", // port React kamu
+    }),
+  );
+}
 
 //middleware
 app.use(express.json());
@@ -33,6 +39,14 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/notes", noteRoutes);
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+  });
+}
 
 connectDB().then(() => {
   app.listen(PORT, () => {

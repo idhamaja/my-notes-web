@@ -9,5 +9,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "This is a simple MERN stack application for note-taking. It allows users to create, read, update, and delete notes. The backend is built with Node.js and Express, while the frontend is built with React."
 }

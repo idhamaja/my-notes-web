@@ -7,6 +7,7 @@ const BASE_URL =
 
 const api = axios.create({
   baseURL: BASE_URL,
+  withCredentials: true, // 🔥 WAJIB kalau pakai credentials di backend
 });
 
 export default api;
